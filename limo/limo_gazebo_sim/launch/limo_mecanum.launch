@@ -12,7 +12,7 @@
         <arg name="debug" value="false"/>
     </include>
 
-    <param name="robot_description" command="$(find xacro)/xacro '$(find limo_description)/urdf/limo_four_diff.xacro'
+    <param name="robot_description" command="$(find xacro)/xacro '$(find limo_description)/urdf/limo_mecanum.xacro'
         robot_namespace:=$(arg robot_namespace)" />
 
     <!-- initial pose -->
@@ -29,14 +29,21 @@
               -param robot_description
               -model 'limo$(arg robot_namespace)'" />
 
-    <!-- Load joint controller configurations from YAML file to parameter server -->
-    <rosparam file="$(find limo_gazebo_sim)/config/limo_four_diff_control.yaml" command="load"/>
+    <!-- Load mecanum wheel velocity controllers -->
+    <rosparam file="$(find limo_gazebo_sim)/config/limo_mecanum_control.yaml" command="load"/>
 
-    <!-- load the controllers -->
+    <!-- Load all mecanum controllers -->
     <node name="controller_spawner" pkg="controller_manager" type="spawner"
-          respawn="false" output="screen" args="limo_state_controller "/>
+          respawn="false" output="screen"
+          args="front_left_wheel_velocity_controller
+                front_right_wheel_velocity_controller
+                rear_left_wheel_velocity_controller
+                rear_right_wheel_velocity_controller
+                limo_state_controller" />
+
+    <node name="mecanum_controller" pkg="limo_gazebo_sim" type="mecanum_cmd_vel_to_wheel_speeds.py" output="screen" cwd="node" />
 
     <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />
-        
+    
     <node name="rviz" pkg="rviz" type="rviz" args="-d $(find limo_description)/rviz/model_display.rviz" />
 </launch>
